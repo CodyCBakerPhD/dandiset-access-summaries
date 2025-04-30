@@ -5,11 +5,11 @@
 const AVAILABLE_DANDISET_IDS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/dandiset_ids.txt";
 const BASE_TSV_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/summaries";
 
-const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_latitude_longitude.yaml";
+const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_latitude_longitude.json";
 let REGION_CODES_TO_LATITUDE_LONGITUDE = {};
 
 // TODO: Remember that when using opencagedata, the "lat"/"lon" are reversed ("lon"/"lat")
-fetch(jsonUrl)
+fetch(REGION_CODES_TO_LATITUDE_LONGITUDE_URL)
     .then((response) => {
         if (!response.ok) {
             throw new Error(`Failed to fetch JSON file: ${response.statusText}`);
@@ -22,6 +22,7 @@ fetch(jsonUrl)
     .catch((error) => {
         console.error("Error loading JSON file:", error);
     });
+
 
 // Check if Plotly is loaded after the window loads
 window.addEventListener("load", () => {
@@ -62,7 +63,7 @@ fetch(AVAILABLE_DANDISET_IDS_URL)
         })
         .then((region_codes_to_latitude_longitude_text) => {
             const region_codes_to_latitude_longitude = region_codes_to_latitude_longitude_text.split("\n").filter((id) => id.trim() !== "");
-        }
+        });
 
         // Load the plot for the first ID by default
         const default_over_time_plot_element_id = "over_time_plot"
@@ -233,6 +234,15 @@ function load_per_asset_histogram(dandiset_id) {
 function load_geographic_heatmap(dandiset_id) {
     const by_region_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_region.tsv`;
     const plot_element_id = "geography_heatmap";
+
+    if (!REGION_CODES_TO_LATITUDE_LONGITUDE) {
+        console.error("Error:", error);
+        const plot_element = document.getElementById(plot_element_id);
+        if (plot_element) {
+            plot_element.innerText = "Failed to load data for geographic heatmap.";
+        }
+        return ""
+    }
 
     fetch(by_region_summary_tsv_url)
         .then((response) => {
