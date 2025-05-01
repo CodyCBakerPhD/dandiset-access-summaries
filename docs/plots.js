@@ -2,11 +2,50 @@
 // (working for the moment due to global import in the index.html file)
 
 // URLs for fetching data
-const AVAILABLE_DANDISET_IDS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/dandiset_ids.txt";
+const ALL_DANDISET_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/all_dandiset_totals.json";
 const BASE_TSV_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/summaries";
 
 const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_latitude_longitude.json";
 let REGION_CODES_TO_LATITUDE_LONGITUDE = {};
+
+
+
+// Check if Plotly is loaded after the window loads
+window.addEventListener("load", () => {
+    if (typeof Plotly === "undefined") {
+        handlePlotlyError();
+    }
+});
+
+// Add an event listener for window resize
+window.addEventListener("resize", resizePlots);
+
+function resizePlots() {
+    // Select the div elements
+    const overTimePlot = document.getElementById("over_time_plot");
+    const perAssetHistogram = document.getElementById("per_asset_histogram");
+    const geographyHeatmap = document.getElementById("geography_heatmap");
+
+    // Update their sizes dynamically
+    if (overTimePlot) {
+        overTimePlot.style.width = "90vw";
+        overTimePlot.style.height = "80vh";
+        Plotly.relayout(overTimePlot, { width: overTimePlot.offsetWidth, height: overTimePlot.offsetHeight });
+    }
+    if (perAssetHistogram) {
+        perAssetHistogram.style.width = "90vw";
+        perAssetHistogram.style.height = "80vh";
+        Plotly.relayout(perAssetHistogram, { width: perAssetHistogram.offsetWidth, height: perAssetHistogram.offsetHeight });
+    }
+    if (geographyHeatmap) {
+        geographyHeatmap.style.width = "90vw";
+        geographyHeatmap.style.height = "80vh";
+        geographyHeatmap.style.margin = "auto";
+        Plotly.relayout(geographyHeatmap, { width: geographyHeatmap.offsetWidth, height: geographyHeatmap.offsetHeight });
+    }
+}
+
+
 
 // TODO: Remember that when using opencagedata, the "lat"/"lon" are reversed ("lon"/"lat")
 fetch(REGION_CODES_TO_LATITUDE_LONGITUDE_URL)
@@ -23,31 +62,24 @@ fetch(REGION_CODES_TO_LATITUDE_LONGITUDE_URL)
         console.error("Error loading JSON file:", error);
     });
 
-
-// Check if Plotly is loaded after the window loads
-window.addEventListener("load", () => {
-    if (typeof Plotly === "undefined") {
-        handlePlotlyError();
-    }
-});
-
 // Populate the dropdown with IDs and render initial plots
-fetch(AVAILABLE_DANDISET_IDS_URL)
+fetch(ALL_DANDISET_TOTALS_URL)
     .then((response) => {
         if (!response.ok) {
             throw new Error(`Failed to fetch available Dandiset IDs: ${response.statusText}`);
         }
         return response.text();
     })
-    .then((dandiset_id_text) => {
-        const available_dandiset_ids = dandiset_id_text.split("\n").filter((id) => id.trim() !== "");
+    .then((all_dandiset_totals_text) => {
+        const all_dandiset_totals = JSON.parse(all_dandiset_totals_text);
+        const dandiset_ids = Object.keys(all_dandiset_totals);
         const selector = document.getElementById("dandiset_selector");
 
         if (!selector) {
             throw new Error("Dropdown element not found on main page.");
         }
 
-        available_dandiset_ids.forEach((id) => {
+        dandiset_ids.forEach((id) => {
             const option = document.createElement("option");
             option.value = id;
             option.textContent = id;
@@ -67,10 +99,10 @@ fetch(AVAILABLE_DANDISET_IDS_URL)
 
         // Load the plot for the first ID by default
         const default_over_time_plot_element_id = "over_time_plot"
-        if (available_dandiset_ids.length > 0) {
-            load_over_time_plot(available_dandiset_ids[0]);
-            load_per_asset_histogram(available_dandiset_ids[0]);
-            load_geographic_heatmap(available_dandiset_ids[0]);
+        if (dandiset_ids.length > 0) {
+            load_over_time_plot(dandiset_ids[0]);
+            load_per_asset_histogram(dandiset_ids[0]);
+            load_geographic_heatmap(dandiset_ids[0]);
         }
 
         // Update the plots when a new Dandiset ID is selected
@@ -177,14 +209,17 @@ function load_per_asset_histogram(dandiset_id) {
                 const filename = row[0].split("/").at(-1);
                 const suffix = filename.split(".").at(-1);
 
-                if (suffix !== "nwb") {
+                if (suffix !== "nwb" && suffix !== "mp4" && suffix !== "avi") {
                     throw new Error("Currently only supports NWB files.");
                 }
 
-                const subject_and_session = filename.split("_");
-                const subject = subject_and_session[0].split("-").slice(1).join("-");
-                const session = subject_and_session[1].split("-").slice(1).join("-");
-                return `${subject}/${session}`;
+                // TODO: this was a heuristic idea for shortening the asset names
+                // const subject_and_session = filename.split("_");
+                // const subject = subject_and_session.at(0).split("-").slice(1).join("-");
+                // const session = subject_and_sessions.slice(1).split("-").slice(1).join("-");
+                // return `${subject} ${session}`;
+
+                return filename;
             });
             const bytes_sent = data.map((row) => parseInt(row[1], 10));
 
@@ -225,7 +260,7 @@ function load_per_asset_histogram(dandiset_id) {
             console.error("Error:", error);
             const plot_element = document.getElementById(plot_element_id);
             if (plot_element) {
-                plot_element.innerText = "Failed to load data for per asset (NWB datasets only).";
+                plot_element.innerText = "Failed to load data for per asset (current supports NWB datasets only).";
             }
         });
 }
