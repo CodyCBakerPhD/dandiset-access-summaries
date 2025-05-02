@@ -144,7 +144,12 @@ function load_over_time_plot(dandiset_id) {
             const data = rows.slice(1).map((row) => row.split("\t"));
 
             const dates = data.map((row) => row[0]);
+            const formatted_dates = dates.map((date) => {
+                const [year, month, day] = date.split("-");
+                return `${month}/${day}/${year}`;
+            });
             const bytes_sent = data.map((row) => parseInt(row[1], 10));
+            const human_readable_bytes_sent = bytes_sent.map((bytes) => format_bytes(bytes));
 
             const plot_data = [
                 {
@@ -152,6 +157,9 @@ function load_over_time_plot(dandiset_id) {
                     mode: "lines+markers",
                     x: dates,
                     y: bytes_sent,
+                    text: formatted_dates.map((formatted_date, index) => `${formatted_date}<br>${human_readable_bytes_sent[index]}`),
+                    textposition: "none",
+                    hoverinfo: "text",
                 }
             ];
 
@@ -222,13 +230,14 @@ function load_per_asset_histogram(dandiset_id) {
                 return filename;
             });
             const bytes_sent = data.map((row) => parseInt(row[1], 10));
+            const human_readable_bytes_sent = bytes_sent.map((bytes) => format_bytes(bytes));
 
             const plot_data = [
                 {
                     type: "bar",
                     x: asset_names,
                     y: bytes_sent,
-                    text: asset_names.map((name, index) => `${name}<br>${bytes_sent[index]} B`),
+                    text: asset_names.map((name, index) => `${name}<br>${human_readable_bytes_sent[index]}`),
                     textposition: "none",
                     hoverinfo: "text",
                 }
@@ -308,12 +317,13 @@ function load_geographic_heatmap(dandiset_id) {
                 const region = row[0];
                 const bytes = parseInt(row[1], 10);
                 const coordinates = REGION_CODES_TO_LATITUDE_LONGITUDE[region];
+                const human_readable_bytes_sent = format_bytes(bytes);
 
                 if (coordinates) {
                     latitudes.push(coordinates.latitude);
                     longitudes.push(coordinates.longitude);
                     bytes_sent.push(bytes);
-                    hover_texts.push(`${region}: ${bytes} bytes`);
+                    hover_texts.push(`${region}<br>${human_readable_bytes_sent}`);
                 }
             });
 
@@ -335,6 +345,9 @@ function load_geographic_heatmap(dandiset_id) {
                         },
                         opacity: 1,
                     },
+                    text: hover_texts,
+                    textposition: "none",
+                    hoverinfo: "text",
                 },
             ];
 
@@ -359,4 +372,17 @@ function load_geographic_heatmap(dandiset_id) {
                 plot_element.innerText = "Failed to load data for geographic heatmap.";
             }
         });
+}
+
+// Function to format bytes into a human-readable string
+function format_bytes(bytes, decimals = 2) {
+    if (bytes === 0) return "0 Bytes";
+
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    const reduced = parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))
+
+    return `${reduced} ${sizes[i]}`;
 }
