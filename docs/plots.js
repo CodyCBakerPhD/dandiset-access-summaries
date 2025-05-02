@@ -228,6 +228,9 @@ function load_per_asset_histogram(dandiset_id) {
                     type: "bar",
                     x: asset_names,
                     y: bytes_sent,
+                    text: asset_names.map((name, index) => `${name}<br>${bytes_sent[index]} B`),
+                    textposition: "none",
+                    hoverinfo: "text",
                 }
             ];
 
@@ -242,9 +245,11 @@ function load_per_asset_histogram(dandiset_id) {
                         text: "Asset Name",
                         font: { size: 16 }
                     },
-                    tickangle: -45,
-                    tickfont: { size: 10 },
-                    automargin: true,
+                    showticklabels: false,
+                    // TODO: ticks are currently too long to fit since heuristic is not working well
+                    // tickangle: -45,
+                    // tickfont: { size: 10 },
+                    // automargin: true,
                 },
                 yaxis: {
                     title: {
