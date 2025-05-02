@@ -2,11 +2,13 @@
 // (working for the moment due to global import in the index.html file)
 
 // URLs for fetching data
+const ARCHIVE_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/archive_totals.json";
 const ALL_DANDISET_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/all_dandiset_totals.json";
 const BASE_TSV_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/summaries";
 
 const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_latitude_longitude.json";
 let REGION_CODES_TO_LATITUDE_LONGITUDE = {};
+let ALL_DANDISET_TOTALS = {};
 
 
 
@@ -65,6 +67,26 @@ fetch(REGION_CODES_TO_LATITUDE_LONGITUDE_URL)
         console.error("Error loading JSON file:", error);
     });
 
+fetch(ARCHIVE_TOTALS_URL)
+    .then((response) => {
+        if (!response.ok) {
+            throw new Error(`Failed to fetch archive totals: ${response.statusText}`);
+        }
+        return response.text();
+    })
+    .then((archive_totals_text) => {
+        ALL_DANDISET_TOTALS["archive"] = JSON.parse(archive_totals_text);
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+
+        // Only overlay error message over first plot element
+        const totals_element = document.getElementById("totals");
+        if (totals_element) {
+            totals_element.innerText = "Failed to load data for archive totals.";
+        }
+    });
+
 // Populate the dropdown with IDs and render initial plots
 fetch(ALL_DANDISET_TOTALS_URL)
     .then((response) => {
@@ -74,14 +96,9 @@ fetch(ALL_DANDISET_TOTALS_URL)
         return response.text();
     })
     .then((all_dandiset_totals_text) => {
-        const all_dandiset_totals = JSON.parse(all_dandiset_totals_text);
-        const dandiset_ids = Object.keys(all_dandiset_totals);
+        Object.assign(ALL_DANDISET_TOTALS, JSON.parse(all_dandiset_totals_text));
+        const dandiset_ids = Object.keys(ALL_DANDISET_TOTALS);
         const selector = document.getElementById("dandiset_selector");
-
-        const default_element = document.createElement("option");
-        default_element.value = "archive";
-        default_element.textContent = "archive";
-        selector.appendChild(default_element);
 
         if (!selector) {
             throw new Error("Dropdown element not found on main page.");
@@ -106,6 +123,7 @@ fetch(ALL_DANDISET_TOTALS_URL)
         });
 
         // Load the plot for the first ID by default
+        update_totals("archive");
         load_over_time_plot("archive");
         load_per_asset_histogram("archive");
         load_geographic_heatmap("archive");
@@ -113,6 +131,7 @@ fetch(ALL_DANDISET_TOTALS_URL)
         // Update the plots when a new Dandiset ID is selected
         selector.addEventListener("change", (event) => {
             const target = event.target;
+            update_totals(target.value);
             load_over_time_plot(target.value);
             load_per_asset_histogram(target.value);
             load_geographic_heatmap(target.value);
@@ -128,10 +147,31 @@ fetch(ALL_DANDISET_TOTALS_URL)
         }
     });
 
+// Function to display scalar totals
+function update_totals(dandiset_id) {
+    const totals_element_id = "totals";
+    const totals_element = document.getElementById(totals_element_id);
+    const totals = ALL_DANDISET_TOTALS[dandiset_id];  // Include 'archive' as a special key
+
+    console.log(dandiset_id)
+    console.log(ALL_DANDISET_TOTALS)
+    console.log(totals)
+
+    try {
+        const human_readable_bytes_sent = format_bytes(totals.total_bytes_sent);
+        totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent to ?(WIP)? unique requesters from ${totals.number_of_unique_regions} regions of ${totals.number_of_unique_countries} countries.`;
+    } catch (error) {
+        console.error("Error:", error);
+        if (totals_element) {
+            totals_element.innerText = "Failed to load totals.";
+        }
+    }
+}
+
 // Function to fetch and render the over time for a given Dandiset ID
 function load_over_time_plot(dandiset_id) {
     const plot_element_id = "over_time_plot";
-    var by_day_summary_tsv_url;
+    let by_day_summary_tsv_url;
 
     if (dandiset_id == "archive") {
         by_day_summary_tsv_url = `${BASE_TSV_URL}/archive_summary_by_day.tsv`;
@@ -209,7 +249,7 @@ function load_over_time_plot(dandiset_id) {
 // Function to fetch and render histogram over asset IDs
 function load_per_asset_histogram(dandiset_id) {
     const plot_element_id = "per_asset_histogram";
-    var by_day_summary_tsv_url = "";
+    let by_day_summary_tsv_url = "";
 
     // Suppress div element content if 'archive' is selected
     if (dandiset_id == "archive") {
@@ -308,7 +348,7 @@ function load_per_asset_histogram(dandiset_id) {
 // Function to fetch and render heatmap over geography
 function load_geographic_heatmap(dandiset_id) {
     const plot_element_id = "geography_heatmap";
-    var by_region_summary_tsv_url;
+    let by_region_summary_tsv_url;
 
     if (dandiset_id == "archive") {
         by_region_summary_tsv_url = `${BASE_TSV_URL}/archive_summary_by_region.tsv`;
