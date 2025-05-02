@@ -178,7 +178,9 @@ function load_over_time_plot(dandiset_id) {
                     title: {
                         text: "Bytes",
                         font: { size: 16 }
-                    }
+                    },
+                    tickformat: "~s",
+                    ticksuffix: "B",
                 },
             }
 
@@ -264,7 +266,9 @@ function load_per_asset_histogram(dandiset_id) {
                     title: {
                         text: "Bytes",
                         font: { size: 16 }
-                    }
+                    },
+                    tickformat: "~s",
+                    ticksuffix: "B",
                 },
             };
 
