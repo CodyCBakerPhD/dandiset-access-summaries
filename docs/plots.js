@@ -26,13 +26,16 @@ function resizePlots() {
     const perAssetHistogram = document.getElementById("per_asset_histogram");
     const geographyHeatmap = document.getElementById("geography_heatmap");
 
+    const dandiset_selector = document.getElementById("dandiset_selector");
+    const selected_dandiset = dandiset_selector.value;
+
     // Update their sizes dynamically
     if (overTimePlot) {
         overTimePlot.style.width = "90vw";
         overTimePlot.style.height = "80vh";
         Plotly.relayout(overTimePlot, { width: overTimePlot.offsetWidth, height: overTimePlot.offsetHeight });
     }
-    if (perAssetHistogram) {
+    if (selected_dandiset !== "archive" && perAssetHistogram) {
         perAssetHistogram.style.width = "90vw";
         perAssetHistogram.style.height = "80vh";
         Plotly.relayout(perAssetHistogram, { width: perAssetHistogram.offsetWidth, height: perAssetHistogram.offsetHeight });
@@ -75,6 +78,11 @@ fetch(ALL_DANDISET_TOTALS_URL)
         const dandiset_ids = Object.keys(all_dandiset_totals);
         const selector = document.getElementById("dandiset_selector");
 
+        const default_element = document.createElement("option");
+        default_element.value = "archive";
+        default_element.textContent = "archive";
+        selector.appendChild(default_element);
+
         if (!selector) {
             throw new Error("Dropdown element not found on main page.");
         }
@@ -98,12 +106,9 @@ fetch(ALL_DANDISET_TOTALS_URL)
         });
 
         // Load the plot for the first ID by default
-        const default_over_time_plot_element_id = "over_time_plot"
-        if (dandiset_ids.length > 0) {
-            load_over_time_plot(dandiset_ids[0]);
-            load_per_asset_histogram(dandiset_ids[0]);
-            load_geographic_heatmap(dandiset_ids[0]);
-        }
+        load_over_time_plot("archive");
+        load_per_asset_histogram("archive");
+        load_geographic_heatmap("archive");
 
         // Update the plots when a new Dandiset ID is selected
         selector.addEventListener("change", (event) => {
@@ -117,7 +122,7 @@ fetch(ALL_DANDISET_TOTALS_URL)
         console.error("Error:", error);
 
         // Only overlay error message over first plot element
-        const over_time_plot_element = document.getElementById(default_over_time_plot_element_id);
+        const over_time_plot_element = document.getElementById("over_time_plot");
         if (over_time_plot_element) {
             over_time_plot_element.innerText = "Failed to load Dandiset IDs and populate default plots.";
         }
@@ -125,8 +130,14 @@ fetch(ALL_DANDISET_TOTALS_URL)
 
 // Function to fetch and render the over time for a given Dandiset ID
 function load_over_time_plot(dandiset_id) {
-    const by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_day.tsv`;
-    const plot_element_id = "over_time_plot"
+    const plot_element_id = "over_time_plot";
+    var by_day_summary_tsv_url;
+
+    if (dandiset_id == "archive") {
+        by_day_summary_tsv_url = `${BASE_TSV_URL}/archive_summary_by_day.tsv`;
+    } else {
+        by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_day.tsv`;
+    }
 
     fetch(by_day_summary_tsv_url)
         .then((response) => {
@@ -197,8 +208,19 @@ function load_over_time_plot(dandiset_id) {
 
 // Function to fetch and render histogram over asset IDs
 function load_per_asset_histogram(dandiset_id) {
-    const by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_asset.tsv`;
     const plot_element_id = "per_asset_histogram";
+    var by_day_summary_tsv_url = "";
+
+    // Suppress div element content if 'archive' is selected
+    if (dandiset_id == "archive") {
+        const plot_element = document.getElementById(plot_element_id);
+        if (plot_element) {
+            plot_element.innerText = "";
+        }
+        return "";
+    } else {
+        by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_day.tsv`;
+    }
 
     fetch(by_day_summary_tsv_url)
         .then((response) => {
@@ -285,8 +307,14 @@ function load_per_asset_histogram(dandiset_id) {
 
 // Function to fetch and render heatmap over geography
 function load_geographic_heatmap(dandiset_id) {
-    const by_region_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_region.tsv`;
     const plot_element_id = "geography_heatmap";
+    var by_region_summary_tsv_url;
+
+    if (dandiset_id == "archive") {
+        by_region_summary_tsv_url = `${BASE_TSV_URL}/archive_summary_by_region.tsv`;
+    } else {
+        by_region_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_region.tsv`;
+    }
 
     if (!REGION_CODES_TO_LATITUDE_LONGITUDE) {
         console.error("Error:", error);
@@ -341,11 +369,14 @@ function load_geographic_heatmap(dandiset_id) {
                     text: hover_texts,
                     marker: {
                         symbol: "circle",
+                        // ad hoc scaling from experimentation
                         size: bytes_sent.map((bytes) => bytes / max_bytes_sent * 25),
                         color: bytes_sent,
                         colorscale: "Viridis",
                         colorbar: {
                             title: "Bytes Sent",
+                            tickformat: "~s",
+                            ticksuffix: "B",
                         },
                         opacity: 1,
                     },
