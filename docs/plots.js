@@ -159,7 +159,9 @@ function update_totals(dandiset_id) {
 
     try {
         const human_readable_bytes_sent = format_bytes(totals.total_bytes_sent);
-        totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent to ?(WIP)? unique requesters from ${totals.number_of_unique_regions} regions of ${totals.number_of_unique_countries} countries.`;
+        //totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent to ?(WIP)? unique requesters from
+        // ${totals.number_of_unique_regions} regions of ${totals.number_of_unique_countries} countries.`;
+        totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent from ${totals.number_of_unique_regions} regions of ${totals.number_of_unique_countries} countries.`;
     } catch (error) {
         console.error("Error:", error);
         if (totals_element) {
