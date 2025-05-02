@@ -153,10 +153,6 @@ function update_totals(dandiset_id) {
     const totals_element = document.getElementById(totals_element_id);
     const totals = ALL_DANDISET_TOTALS[dandiset_id];  // Include 'archive' as a special key
 
-    console.log(dandiset_id)
-    console.log(ALL_DANDISET_TOTALS)
-    console.log(totals)
-
     try {
         const human_readable_bytes_sent = format_bytes(totals.total_bytes_sent);
         //totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent to ?(WIP)? unique requesters from
@@ -261,7 +257,7 @@ function load_per_asset_histogram(dandiset_id) {
         }
         return "";
     } else {
-        by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_day.tsv`;
+        by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_asset.tsv`;
     }
 
     fetch(by_day_summary_tsv_url)
