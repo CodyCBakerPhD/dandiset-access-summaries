@@ -111,17 +111,6 @@ fetch(ALL_DANDISET_TOTALS_URL)
             selector.appendChild(option);
         });
 
-        fetch (REGION_CODES_TO_LATITUDE_LONGITUDE_URL)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Failed to fetch region codes to latitude/longitude: ${response.statusText}`);
-            }
-            return response.text();
-        })
-        .then((region_codes_to_latitude_longitude_text) => {
-            const region_codes_to_latitude_longitude = region_codes_to_latitude_longitude_text.split("\n").filter((id) => id.trim() !== "");
-        });
-
         // Load the plot for the first ID by default
         update_totals("archive");
         load_over_time_plot("archive");
@@ -171,7 +160,7 @@ function load_over_time_plot(dandiset_id) {
     const plot_element_id = "over_time_plot";
     let by_day_summary_tsv_url;
 
-    if (dandiset_id == "archive") {
+    if (dandiset_id === "archive") {
         by_day_summary_tsv_url = `${BASE_TSV_URL}/archive_summary_by_day.tsv`;
     } else {
         by_day_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_day.tsv`;
@@ -250,7 +239,7 @@ function load_per_asset_histogram(dandiset_id) {
     let by_day_summary_tsv_url = "";
 
     // Suppress div element content if 'archive' is selected
-    if (dandiset_id == "archive") {
+    if (dandiset_id === "archive") {
         const plot_element = document.getElementById(plot_element_id);
         if (plot_element) {
             plot_element.innerText = "";
@@ -348,7 +337,7 @@ function load_geographic_heatmap(dandiset_id) {
     const plot_element_id = "geography_heatmap";
     let by_region_summary_tsv_url;
 
-    if (dandiset_id == "archive") {
+    if (dandiset_id === "archive") {
         by_region_summary_tsv_url = `${BASE_TSV_URL}/archive_summary_by_region.tsv`;
     } else {
         by_region_summary_tsv_url = `${BASE_TSV_URL}/${dandiset_id}/dandiset_summary_by_region.tsv`;
@@ -404,7 +393,6 @@ function load_geographic_heatmap(dandiset_id) {
                     mode: "markers",
                     lat: latitudes,
                     lon: longitudes,
-                    text: hover_texts,
                     marker: {
                         symbol: "circle",
                         // ad hoc scaling from experimentation
