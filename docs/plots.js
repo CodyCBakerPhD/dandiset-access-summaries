@@ -5,8 +5,8 @@
 const ARCHIVE_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/archive_totals.json";
 const ALL_DANDISET_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/all_dandiset_totals.json";
 const BASE_TSV_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/summaries";
+const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_coordinates.json";
 
-const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_latitude_longitude.json";
 let REGION_CODES_TO_LATITUDE_LONGITUDE = {};
 let ALL_DANDISET_TOTALS = {};
 
@@ -146,7 +146,7 @@ function update_totals(dandiset_id) {
         const human_readable_bytes_sent = format_bytes(totals.total_bytes_sent);
         //totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent to ?(WIP)? unique requesters from
         // ${totals.number_of_unique_regions} regions of ${totals.number_of_unique_countries} countries.`;
-        totals_element.innerText = `Totals: ${human_readable_bytes_sent} sent from ${totals.number_of_unique_regions} regions of ${totals.number_of_unique_countries} countries.`;
+        totals_element.innerText = `Total: ${human_readable_bytes_sent} sent from ${totals.number_of_unique_regions} regions across ${totals.number_of_unique_countries} countries.`;
     } catch (error) {
         console.error("Error:", error);
         if (totals_element) {
@@ -396,7 +396,9 @@ function load_geographic_heatmap(dandiset_id) {
                     marker: {
                         symbol: "circle",
                         // ad hoc scaling from experimentation
-                        size: bytes_sent.map((bytes) => bytes / max_bytes_sent * 25),
+                        // size: 5,
+                        size: bytes_sent.map((bytes) => Math.log(bytes) * 0.5),
+                        //size: bytes_sent.map((bytes) => bytes / max_bytes_sent * 10),
                         color: bytes_sent,
                         colorscale: "Viridis",
                         colorbar: {
