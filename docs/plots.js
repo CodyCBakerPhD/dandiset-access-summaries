@@ -5,7 +5,7 @@
 const ARCHIVE_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/archive_totals.json";
 const ALL_DANDISET_TOTALS_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/all_dandiset_totals.json";
 const BASE_TSV_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/summaries";
-const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_latitude_longitude.json";
+const REGION_CODES_TO_LATITUDE_LONGITUDE_URL = "https://raw.githubusercontent.com/CodyCBakerPhD/dandiset-access-summaries/main/content/region_codes_to_coordinates.json";
 
 let REGION_CODES_TO_LATITUDE_LONGITUDE = {};
 let ALL_DANDISET_TOTALS = {};
@@ -408,7 +408,9 @@ function load_geographic_heatmap(dandiset_id) {
                     marker: {
                         symbol: "circle",
                         // ad hoc scaling from experimentation
-                        size: bytes_sent.map((bytes) => bytes / max_bytes_sent * 25),
+                        // size: 5,
+                        size: bytes_sent.map((bytes) => Math.log(bytes) * 0.5),
+                        //size: bytes_sent.map((bytes) => bytes / max_bytes_sent * 10),
                         color: bytes_sent,
                         colorscale: "Viridis",
                         colorbar: {
