@@ -11,8 +11,8 @@ jobs:
     # Will read on PR dashboard as 'Deploy / UpdateCoordinates / ??'
     # Action dashboard identified by 'Update coordinates'
     # Requirement settings identified as 'UpdateCoordinates / ??'
-    name: ubuntu
-    runs-on: ubuntu-latest
+    name: Drogon
+    runs-on: self-hosted
     strategy:
       fail-fast: false
 
