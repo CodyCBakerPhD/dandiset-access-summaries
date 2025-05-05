@@ -15,5 +15,6 @@ jobs:
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
         with:
-          source-dir: ./docs/
+          source-dir: .
           preview-branch: gh-pages
+          pages-base-path: docs/
