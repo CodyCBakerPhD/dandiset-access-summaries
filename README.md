@@ -1,3 +1,3 @@
-# Dandiset access summaries
+IMPORTANT: This project is in the process of migrating to https://github.com/dandi/access-summaries (for data dissemination) and https://github.com/dandi/access-page (for visualizations).
 
-Summaries of access stats (full downloads &amp; streaming) for each dandiset on the DANDI archive.
+Please raise questions, ideas, and requests on those respective projects.
